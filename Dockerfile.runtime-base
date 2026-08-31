@@ -39,7 +39,8 @@ RUN printf '#!/bin/sh\nexec xvfb-run -a "$@"\n' > /usr/local/bin/run-headless \
 
 # Run as a non-root user. The game is appended at /game (root-owned, world-readable)
 # and launched headless; it writes config/saves under $HOME, not the install dir.
-RUN useradd --create-home --uid 1000 app
+# ubuntu:24.04 ships a stock user at uid 1000, so reclaim it first.
+RUN userdel --remove ubuntu 2>/dev/null; useradd --create-home --uid 1000 app
 USER app
 
 WORKDIR /game

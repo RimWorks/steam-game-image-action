@@ -31,6 +31,6 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          IMG="ghcr.io/${REPO}/runtime-base"
+          IMG="ghcr.io/${REPO,,}/runtime-base"
           docker build --pull -f Dockerfile.runtime-base -t "$IMG:latest" .
           docker push "$IMG:latest"

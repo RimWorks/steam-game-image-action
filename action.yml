@@ -1,6 +1,6 @@
 name: "Build Steam game image"
 description: "Download a Steam game with steamcmd and push it as a private OCI image to a registry you control."
-author: cryptiklemur
+author: RimWorks
 branding:
   icon: download-cloud
   color: blue

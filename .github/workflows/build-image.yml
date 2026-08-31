@@ -3,7 +3,7 @@
 #
 #   jobs:
 #     build:
-#       uses: cryptiklemur/steam-game-image-action/.github/workflows/build-image.yml@v1
+#       uses: RimWorks/steam-game-image-action/.github/workflows/build-image.yml@v1
 #       with:   { image: ghcr.io/you/rimworld-game }
 #       secrets:
 #         steam-config-vdf: ${{ secrets.STEAM_CONFIG_VDF }}
@@ -60,7 +60,7 @@ jobs:
       packages: write
       contents: read
     steps:
-      - uses: cryptiklemur/steam-game-image-action@3152efb5411f3e637260569fb68cfd8fb5ed55c1 # v1
+      - uses: RimWorks/steam-game-image-action@3152efb5411f3e637260569fb68cfd8fb5ed55c1 # v1
         with:
           steam-username: ${{ inputs.steam-username }}
           steam-config-vdf: ${{ secrets.steam-config-vdf }}

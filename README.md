@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions: { packages: write, contents: read }
     steps:
-      - uses: cryptiklemur/steam-game-image-action@v1
+      - uses: RimWorks/steam-game-image-action@v1
         with:
           steam-username: your-steam-account
           steam-config-vdf: ${{ secrets.STEAM_CONFIG_VDF }}

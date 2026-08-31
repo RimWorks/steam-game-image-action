@@ -49,7 +49,7 @@ inputs:
   runtime-base-image:
     description: "Override the default public runtime base image."
     required: false
-    default: "ghcr.io/cryptiklemur/steam-game-image-action/runtime-base:latest"
+    default: "ghcr.io/rimworks/steam-game-image-action/runtime-base:latest"
   minimal-base-image:
     description: "Base used when runnable=false."
     required: false

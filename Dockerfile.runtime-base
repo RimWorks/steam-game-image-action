@@ -11,6 +11,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
         xvfb \
+        xdotool \
         libgl1 \
         libglu1-mesa \
         libx11-6 \

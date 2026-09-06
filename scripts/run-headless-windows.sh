@@ -22,6 +22,7 @@ export STEAM_COMPAT_DATA_PATH STEAM_COMPAT_CLIENT_INSTALL_PATH PROTON_DIR DESKTO
 
 # Without the virtual desktop Unity crashes one frame after "<RI> Input initialized"
 # on a bare Xvfb. explorer detaches, so wineserver -w is what holds Xvfb open.
+# shellcheck disable=SC2016 # deliberate: the inner sh expands these, not this shell
 exec xvfb-run -a -s "-screen 0 $SCREEN" sh -c '
   "$PROTON_DIR/proton" run explorer "/desktop=game,$DESKTOP" "$@"
   WINEPREFIX="$STEAM_COMPAT_DATA_PATH/pfx" exec "$PROTON_DIR/files/bin/wineserver" -w

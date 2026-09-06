@@ -213,22 +213,22 @@ runs:
         APP_ID: ${{ inputs.app-id }}
         BRANCH: ${{ inputs.branch }}
         BRANCH_PASSWORD: ${{ inputs.branch-password }}
-        STEAM_PLATFORM: ${{ inputs.steam-platform }}
+        # Never name this STEAM_PLATFORM: steamcmd.sh picks its own binary directory from
+        # that variable, so it would hunt for .steamcmd/windows/steamcmd and exit.
+        DEPOT_PLATFORM: ${{ inputs.steam-platform }}
       run: |
         set -euo pipefail
         dir="${RUNNER_TEMP:-/tmp}/steam-game"
         mkdir -p "$dir"
         beta=(); [ "$BRANCH" != "public" ] && beta=(-beta "$BRANCH")
         [ -n "$BRANCH_PASSWORD" ] && beta+=(-betapassword "$BRANCH_PASSWORD")
-        # Has to follow +login. Set earlier, steamcmd.sh reads it while locating its own
-        # binary and looks under a per-platform dir that does not exist.
-        plat=(); [ -n "$STEAM_PLATFORM" ] && plat=(+@sSteamCmdForcePlatformType "$STEAM_PLATFORM")
+        plat=(); [ -n "$DEPOT_PLATFORM" ] && plat=(+@sSteamCmdForcePlatformType "$DEPOT_PLATFORM")
         steamcmd \
           +@ShutdownOnFailedCommand 1 \
           +@NoPromptForPassword 1 \
+          "${plat[@]}" \
           +force_install_dir "$dir" \
           +login "$STEAM_USERNAME" \
-          "${plat[@]}" \
           +app_update "$APP_ID" "${beta[@]}" validate \
           +quit
         echo "GAME_DIR=$dir" >> "$GITHUB_ENV"

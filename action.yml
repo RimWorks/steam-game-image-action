@@ -220,14 +220,15 @@ runs:
         mkdir -p "$dir"
         beta=(); [ "$BRANCH" != "public" ] && beta=(-beta "$BRANCH")
         [ -n "$BRANCH_PASSWORD" ] && beta+=(-betapassword "$BRANCH_PASSWORD")
-        # Has to precede +login: steamcmd reads the platform when it opens the session.
+        # Has to follow +login. Set earlier, steamcmd.sh reads it while locating its own
+        # binary and looks under a per-platform dir that does not exist.
         plat=(); [ -n "$STEAM_PLATFORM" ] && plat=(+@sSteamCmdForcePlatformType "$STEAM_PLATFORM")
         steamcmd \
           +@ShutdownOnFailedCommand 1 \
           +@NoPromptForPassword 1 \
-          "${plat[@]}" \
           +force_install_dir "$dir" \
           +login "$STEAM_USERNAME" \
+          "${plat[@]}" \
           +app_update "$APP_ID" "${beta[@]}" validate \
           +quit
         echo "GAME_DIR=$dir" >> "$GITHUB_ENV"

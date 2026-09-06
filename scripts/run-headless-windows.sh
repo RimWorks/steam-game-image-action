@@ -17,6 +17,11 @@ if [ -z "${VK_ICD_FILENAMES:-}" ]; then
   export VK_ICD_FILENAMES
 fi
 
+# WINEPATH appends to the Windows PATH, which is where a game running under wine looks
+# for a helper like ffmpeg. Z: is the unix root.
+: "${WINEPATH:=Z:\\opt\\ffmpeg}"
+export WINEPATH
+
 mkdir -p "$STEAM_COMPAT_DATA_PATH" "$STEAM_COMPAT_CLIENT_INSTALL_PATH"
 export STEAM_COMPAT_DATA_PATH STEAM_COMPAT_CLIENT_INSTALL_PATH PROTON_DIR DESKTOP
 

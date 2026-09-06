@@ -24,6 +24,13 @@ inputs:
     description: "Password for a password-protected beta branch (optional)."
     required: false
     default: ""
+  steam-platform:
+    description: >-
+      Depot platform to download (linux, windows, macos). Empty (default) = the
+      platform steamcmd runs on. Pair 'windows' with a Proton-capable base-image;
+      the default runtime base has no wine.
+    required: false
+    default: ""
   image:
     description: "Target image ref WITHOUT a tag, e.g. ghcr.io/you/rimworld-game."
     required: true
@@ -206,15 +213,19 @@ runs:
         APP_ID: ${{ inputs.app-id }}
         BRANCH: ${{ inputs.branch }}
         BRANCH_PASSWORD: ${{ inputs.branch-password }}
+        STEAM_PLATFORM: ${{ inputs.steam-platform }}
       run: |
         set -euo pipefail
         dir="${RUNNER_TEMP:-/tmp}/steam-game"
         mkdir -p "$dir"
         beta=(); [ "$BRANCH" != "public" ] && beta=(-beta "$BRANCH")
         [ -n "$BRANCH_PASSWORD" ] && beta+=(-betapassword "$BRANCH_PASSWORD")
+        # Has to precede +login: steamcmd reads the platform when it opens the session.
+        plat=(); [ -n "$STEAM_PLATFORM" ] && plat=(+@sSteamCmdForcePlatformType "$STEAM_PLATFORM")
         steamcmd \
           +@ShutdownOnFailedCommand 1 \
           +@NoPromptForPassword 1 \
+          "${plat[@]}" \
           +force_install_dir "$dir" \
           +login "$STEAM_USERNAME" \
           +app_update "$APP_ID" "${beta[@]}" validate \

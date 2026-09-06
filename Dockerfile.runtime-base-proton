@@ -1,0 +1,58 @@
+# Public, game-free base for running a WINDOWS Steam game on Linux. The action
+# `crane append`s the game on top at /game, same as Dockerfile.runtime-base.
+# Proton renders D3D through DXVK, which needs a Vulkan driver, so Mesa's lavapipe
+# supplies one on a GPU-less runner. Wine's own OpenGL path is not a fallback: it
+# hangs RimWorld on boot whether or not the display is real.
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Pinned so an image rebuild cannot silently change the wine underneath a test run.
+ARG PROTON_VERSION=GE-Proton10-34
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        python3 \
+        xvfb \
+        xdotool \
+        mesa-vulkan-drivers \
+        libvulkan1 \
+        vulkan-tools \
+        libgl1 \
+        libglu1-mesa \
+        libx11-6 \
+        libxcursor1 \
+        libxrandr2 \
+        libxinerama1 \
+        libxi6 \
+        libxext6 \
+        libxrender1 \
+        libxcomposite1 \
+        libfreetype6 \
+        libsdl2-2.0-0 \
+        libnss3 \
+        libasound2t64 \
+        libpulse0 \
+        libgtk-3-0 \
+        locales \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV LANG=C.UTF-8
+
+RUN mkdir -p /opt/proton \
+    && curl -fsSL "https://github.com/GloriousEggroll/proton-ge-custom/releases/download/${PROTON_VERSION}/${PROTON_VERSION}.tar.gz" \
+       | tar -xz -C /opt/proton --strip-components=1 \
+    && test -x /opt/proton/proton
+
+# `run-headless-windows <game.exe> <args...>`, the Windows twin of run-headless.
+COPY scripts/run-headless-windows.sh /usr/local/bin/run-headless-windows
+RUN chmod +x /usr/local/bin/run-headless-windows
+
+# The game is appended at /game root-owned and world-readable, and the wine prefix
+# lives under $HOME. Same reclaim of uid 1000 as Dockerfile.runtime-base.
+RUN userdel --remove ubuntu 2>/dev/null; useradd --create-home --uid 1000 app
+USER app
+
+WORKDIR /game

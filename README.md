@@ -72,6 +72,7 @@ cron runs stay cheap and only a genuinely new build kicks off a rebuild.
 | `app-id` | `294100` | Steam app id (RimWorld) |
 | `branch` | `public` | Steam branch, e.g. `1.5`, `1.4` |
 | `branch-password` | `""` | for password-protected betas |
+| `steam-platform` | `""` (the host's) | depot platform: `linux`, `windows`, `macos`. Pair `windows` with the Proton base |
 | `image` | N/A | target ref without tag, e.g. `ghcr.io/you/rimworld-game` |
 | `registry` / `registry-username` / `registry-password` | `ghcr.io` / actor / N/A | push auth (GHCR + `GITHUB_TOKEN` works) |
 | `runnable` | `true` | `true` appends onto the xvfb/native-deps base; `false` gives a minimal build/reference base |
@@ -86,6 +87,11 @@ How people usually run it:
   gets you just the managed assemblies on a minimal base. Tiny, and enough to compile against
   the real DLLs without dragging the whole game along. (`include-paths` is relative to the game
   install, and the `*_Data/Managed` layout is a Unity thing.)
+- **A Windows game on a Linux runner:** set `steam-platform: windows` and point `base-image`
+  at `ghcr.io/rimworks/steam-game-image-action/runtime-base-proton:latest`. That base carries
+  Proton and Mesa's software Vulkan driver. Launch with its `run-headless-windows` wrapper
+  instead of `run-headless`. A CI runner has no GPU, so the game renders on the CPU and boots
+  slowly.
 
 Outputs: `image-ref` (the `image:version` ref when built, the `image:latest-<branch>` ref
 when the gate skipped, so it is always pullable), `version`, `buildid`, `skipped`.

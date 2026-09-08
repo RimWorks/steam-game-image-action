@@ -1,10 +1,10 @@
 name: test
 
 on:
-  push:
-    branches: [main]
   pull_request:
+  workflow_call:
 
+# semantic-release.yml grants write scopes; a called workflow inherits them unless it drops them.
 permissions:
   contents: read
 
@@ -12,7 +12,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: shellcheck
         run: |
           sudo apt-get update -qq
@@ -22,5 +22,7 @@ jobs:
         run: bash tests/test-published-buildid.sh
       - name: actionlint
         run: |
-          bash <(curl -sSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          # pinned: this job gates the release, so an unpinned main-branch script and a
+          # floating binary version could both break or poison a publish.
+          bash <(curl -sSL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.12/scripts/download-actionlint.bash) 1.7.12
           ./actionlint

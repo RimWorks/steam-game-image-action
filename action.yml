@@ -193,8 +193,9 @@ runs:
         fi
 
     - name: Restore game install cache
+      id: game-cache
       if: steps.gate.outputs.skipped != 'true'
-      uses: actions/cache@v4
+      uses: actions/cache/restore@v4
       with:
         # Restore the prior install so steamcmd app_update fetches only the delta.
         # The exact-buildid key never hits on a real rebuild (the gate only lets us
@@ -232,6 +233,34 @@ runs:
           +app_update "$APP_ID" "${beta[@]}" validate \
           +quit
         echo "GAME_DIR=$dir" >> "$GITHUB_ENV"
+
+    # steamcmd exits 0 on a partial update, so a half-downloaded install used to ship and then
+    # get saved back to the cache, poisoning every later build.
+    - name: Verify game install
+      if: steps.gate.outputs.skipped != 'true'
+      shell: bash
+      env:
+        APP_ID: ${{ inputs.app-id }}
+        WANT: ${{ steps.gate.outputs.published }}
+      run: |
+        set -euo pipefail
+        acf="$GAME_DIR/steamapps/appmanifest_${APP_ID}.acf"
+        [ -f "$acf" ] || { echo "no appmanifest at $acf - the download never ran" >&2; exit 1; }
+        state="$(grep -oP '"StateFlags"\s+"\K[0-9]+' "$acf")"
+        got="$(grep -oP '"buildid"\s+"\K[0-9]+' "$acf")"
+        [ "$state" = 4 ] || { echo "StateFlags=$state, want 4 (fully installed)" >&2; exit 1; }
+        # WANT is empty when the buildid lookup failed; the gate tolerates that, so we do too.
+        if [ -n "$WANT" ] && [ "$got" != "$WANT" ]; then
+          echo "buildid=$got, want $WANT" >&2
+          exit 1
+        fi
+
+    - name: Save game install cache
+      if: steps.gate.outputs.skipped != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ runner.temp }}/steam-game
+        key: steam-${{ inputs.app-id }}-${{ inputs.branch }}-${{ steps.gate.outputs.published }}
 
     - name: Build and push image
       id: build

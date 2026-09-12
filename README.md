@@ -36,15 +36,16 @@ jobs:
           steam-config-vdf: ${{ secrets.STEAM_CONFIG_VDF }}
           image: ghcr.io/${{ github.repository_owner }}/rimworld-game
           registry-password: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: RimWorks/steam-game-image-action/.github/actions/ghcr-private-check@v1
-        with:
-          package: rimworld-game
 ```
 
 That pushes `ghcr.io/you/rimworld-game:<version>`, `:latest` and a branch-scoped
-`:latest-<branch>`, all private and labeled with `steam.buildid`. The second step fails the job
-if the package is anonymously pullable, because a public game image is redistribution.
+`:latest-<branch>`, all private and labeled with `steam.buildid`.
+
+The action then fails the job if that image is anonymously pullable, because a public game image
+is redistribution. It follows the registry's own auth challenge, so it works on GHCR, Docker Hub,
+GitLab, quay and anything else implementing the Distribution v2 spec. The check runs on every
+invocation, including one the build-id gate skipped, because a package can be flipped to public
+in the registry UI long after its last push. Set `require-private: false` to turn it off.
 
 To keep the image fresh, copy [`examples/watch-and-build.yml`](examples/watch-and-build.yml). A
 scheduled run compares the published buildid against your image's `steam.buildid` label and

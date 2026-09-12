@@ -77,6 +77,10 @@ inputs:
     description: "sha256 of the crane linux x86_64 tarball. Defaults to the hash for crane-version's default."
     required: false
     default: "c14340087103ba9dadf61d45acd20675490fd0ccbd56ac7901fc1b502137f44b"
+  require-private:
+    description: "true = fail when the pushed image is anonymously pullable. A game image must never be public."
+    required: false
+    default: "true"
   skip-if-unchanged:
     description: "true = compare the published buildid to the image's steam.buildid label and skip when unchanged."
     required: false
@@ -294,6 +298,18 @@ runs:
         PLATFORM: ${{ inputs.platform }}
         INCLUDE_PATHS: ${{ inputs.include-paths }}
       run: "${{ github.action_path }}/scripts/build-image.sh"
+
+    - name: Refuse to leave the image public
+      if: inputs.require-private == 'true'
+      shell: bash
+      env:
+        IMAGE: ${{ inputs.image }}
+        REGISTRY: ${{ inputs.registry }}
+      run: |
+        # runs even when the build-id gate skipped: the image still exists, and it can be
+        # flipped public in the registry ui long after the last push
+        name="${IMAGE#"${REGISTRY}/"}"
+        "${{ github.action_path }}/scripts/assert-private.sh" "$REGISTRY" "$name"
 
     - name: Wipe Steam credentials
       if: always()

@@ -1,0 +1,38 @@
+name: ghcr private check
+description: Fails when a GHCR package is anonymously pullable.
+
+inputs:
+  package:
+    description: Package name under the owner, such as rimworld-game-runnable.
+    required: true
+  owner:
+    description: Package owner. Defaults to the repository owner.
+    required: false
+    default: ${{ github.repository_owner }}
+
+runs:
+  using: composite
+  steps:
+    - name: Check ${{ inputs.package }} is not anonymously pullable
+      shell: bash
+      env:
+        OWNER: ${{ inputs.owner }}
+        NAME: ${{ inputs.package }}
+      run: |
+        set -uo pipefail
+
+        # A refused token is the outcome we want, so neither call may abort the step.
+        token="$(curl -sS "https://ghcr.io/token?scope=repository:${OWNER}/${NAME}:pull&service=ghcr.io" \
+          | jq -r '.token // empty')" || token=''
+
+        code="$(curl -s -o /dev/null -w '%{http_code}' \
+          -H "Authorization: Bearer ${token}" \
+          "https://ghcr.io/v2/${OWNER}/${NAME}/tags/list")"
+
+        if [[ "$code" == "200" ]]; then
+          echo "::error::ghcr.io/${OWNER}/${NAME} is anonymously pullable." \
+               "Set the package to private before using it again."
+          exit 1
+        fi
+
+        echo "not anonymously pullable (HTTP ${code})"

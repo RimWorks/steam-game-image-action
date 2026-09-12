@@ -10,6 +10,8 @@ on:
       - Dockerfile.runtime-base
       - Dockerfile.runtime-base-proton
       - scripts/run-headless-windows.sh
+      - scripts/run-headless.sh
+      - scripts/headless-common.sh
       - .github/workflows/runtime-base.yml
   workflow_dispatch:
 

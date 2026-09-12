@@ -59,12 +59,12 @@ RUN mkdir -p /opt/ffmpeg \
     && test -f /opt/ffmpeg/ffmpeg.exe
 
 # `run-headless-windows <game.exe> <args...>`, the Windows twin of run-headless.
+COPY scripts/headless-common.sh /usr/local/lib/headless-common.sh
 COPY scripts/run-headless-windows.sh /usr/local/bin/run-headless-windows
 RUN chmod +x /usr/local/bin/run-headless-windows
 
-# The game is appended at /game root-owned and world-readable, and the wine prefix
-# lives under $HOME. Same reclaim of uid 1000 as Dockerfile.runtime-base.
+# same uid 1000 reclaim and root-then-drop as Dockerfile.runtime-base
 RUN userdel --remove ubuntu 2>/dev/null; useradd --create-home --uid 1000 app
-USER app
+ENV HOME=/home/app
 
 WORKDIR /game

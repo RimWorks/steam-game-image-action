@@ -1,15 +1,19 @@
 #!/bin/sh
-# Launch a Windows game from the appended /game under Xvfb and Proton.
+# run-headless-windows 'Z:\game\YourGame.exe' <args...>
 set -eu
 
+# shellcheck source=scripts/headless-common.sh
+. /usr/local/lib/headless-common.sh
+
 : "${PROTON_DIR:=/opt/proton}"
-: "${STEAM_COMPAT_DATA_PATH:=$HOME/.proton}"
-: "${STEAM_COMPAT_CLIENT_INSTALL_PATH:=$HOME/.steam}"
-: "${SCREEN:=1920x1080x24}"
 : "${DESKTOP:=1920x1080}"
 
-# The lavapipe ICD filename carries the arch on Debian and not on Arch, so it is
-# globbed rather than hardcoded.
+drop_to_game_user "$@"
+
+: "${STEAM_COMPAT_DATA_PATH:=$HOME/.proton}"
+: "${STEAM_COMPAT_CLIENT_INSTALL_PATH:=$HOME/.steam}"
+
+# the lavapipe ICD filename carries the arch on Debian and not on Arch
 if [ -z "${VK_ICD_FILENAMES:-}" ]; then
   for icd in /usr/share/vulkan/icd.d/lvp_icd*.json; do
     [ -e "$icd" ] && VK_ICD_FILENAMES="$icd" && break
@@ -17,18 +21,17 @@ if [ -z "${VK_ICD_FILENAMES:-}" ]; then
   export VK_ICD_FILENAMES
 fi
 
-# WINEPATH appends to the Windows PATH, which is where a game running under wine looks
-# for a helper like ffmpeg. Z: is the unix root.
+# where a game under wine looks for ffmpeg. Z: is the unix root
 : "${WINEPATH:=Z:\\opt\\ffmpeg}"
 export WINEPATH
 
 mkdir -p "$STEAM_COMPAT_DATA_PATH" "$STEAM_COMPAT_CLIENT_INSTALL_PATH"
 export STEAM_COMPAT_DATA_PATH STEAM_COMPAT_CLIENT_INSTALL_PATH PROTON_DIR DESKTOP
 
-# Without the virtual desktop Unity crashes one frame after "<RI> Input initialized"
-# on a bare Xvfb. explorer detaches, so wineserver -w is what holds Xvfb open.
+# without the virtual desktop Unity crashes one frame after "<RI> Input initialized".
+# explorer detaches, so wineserver -w is what holds Xvfb open.
 # shellcheck disable=SC2016 # deliberate: the inner sh expands these, not this shell
-exec xvfb-run -a -s "-screen 0 $SCREEN" sh -c '
+run_under_xvfb sh -c '
   "$PROTON_DIR/proton" run explorer "/desktop=game,$DESKTOP" "$@"
   WINEPREFIX="$STEAM_COMPAT_DATA_PATH/pfx" exec "$PROTON_DIR/files/bin/wineserver" -w
 ' _ "$@"

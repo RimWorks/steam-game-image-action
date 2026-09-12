@@ -202,9 +202,9 @@ runs:
         # here when the buildid changed), so the prefix restore-key restores the most
         # recent install and a fresh entry is saved post-job under the new buildid.
         path: ${{ runner.temp }}/steam-game
-        key: steam-${{ inputs.app-id }}-${{ inputs.branch }}-${{ steps.gate.outputs.published }}
+        key: steam-${{ inputs.app-id }}-${{ inputs.branch }}-${{ inputs.steam-platform != '' && inputs.steam-platform || 'host' }}-${{ steps.gate.outputs.published }}
         restore-keys: |
-          steam-${{ inputs.app-id }}-${{ inputs.branch }}-
+          steam-${{ inputs.app-id }}-${{ inputs.branch }}-${{ inputs.steam-platform != '' && inputs.steam-platform || 'host' }}-
 
     - name: Download game
       if: steps.gate.outputs.skipped != 'true'
@@ -260,7 +260,7 @@ runs:
       uses: actions/cache/save@v4
       with:
         path: ${{ runner.temp }}/steam-game
-        key: steam-${{ inputs.app-id }}-${{ inputs.branch }}-${{ steps.gate.outputs.published }}
+        key: steam-${{ inputs.app-id }}-${{ inputs.branch }}-${{ inputs.steam-platform != '' && inputs.steam-platform || 'host' }}-${{ steps.gate.outputs.published }}
 
     - name: Build and push image
       id: build

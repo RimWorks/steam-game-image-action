@@ -70,9 +70,13 @@ inputs:
     required: false
     default: "linux/amd64"
   crane-version:
-    description: "go-containerregistry (crane) version to install."
+    description: "go-containerregistry (crane) version to install. Override it and you must set crane-sha256 too."
     required: false
     default: "0.20.2"
+  crane-sha256:
+    description: "sha256 of the crane linux x86_64 tarball. Defaults to the hash for crane-version's default."
+    required: false
+    default: "c14340087103ba9dadf61d45acd20675490fd0ccbd56ac7901fc1b502137f44b"
   skip-if-unchanged:
     description: "true = compare the published buildid to the image's steam.buildid label and skip when unchanged."
     required: false
@@ -107,6 +111,7 @@ runs:
       shell: bash
       env:
         CRANE_VERSION: ${{ inputs.crane-version }}
+        CRANE_SHA256: ${{ inputs.crane-sha256 }}
       run: |
         set -euo pipefail
         # Retry transient mirror hiccups (the runner's packages.microsoft.com source
@@ -115,12 +120,23 @@ runs:
         sudo apt-get -o Acquire::Retries=3 update -qq
         sudo apt-get install -y -qq --no-install-recommends ca-certificates curl tar jq lib32gcc-s1 >/dev/null
         mkdir -p "$HOME/.steamcmd"
-        curl -sqL https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz \
+        # valve ships steamcmd from one unversioned url, so there is no stable hash to pin.
+        curl -sqL --proto '=https' --proto-redir '=https' https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz \
           | tar zxf - -C "$HOME/.steamcmd"
         printf '#!/bin/sh\nexec "%s/steamcmd.sh" "$@"\n' "$HOME/.steamcmd" | sudo tee /usr/local/bin/steamcmd >/dev/null
         sudo chmod +x /usr/local/bin/steamcmd
-        curl -sSL "https://github.com/google/go-containerregistry/releases/download/v${CRANE_VERSION}/go-containerregistry_Linux_x86_64.tar.gz" \
-          | sudo tar -xzf - -C /usr/local/bin crane
+        # crane runs with the registry password on stdin, so the hash is pinned here rather
+        # than taken from the release's own checksums.txt, which proves nothing
+        if [ "$CRANE_VERSION" != "0.20.2" ] && [ "$CRANE_SHA256" = "c14340087103ba9dadf61d45acd20675490fd0ccbd56ac7901fc1b502137f44b" ]; then
+          echo "::error::crane-version is $CRANE_VERSION but crane-sha256 is still the 0.20.2 default." \
+               "Set crane-sha256 to that release's go-containerregistry_Linux_x86_64.tar.gz hash." >&2
+          exit 1
+        fi
+        curl -sSL --proto '=https' --proto-redir '=https' -o /tmp/crane.tar.gz \
+          "https://github.com/google/go-containerregistry/releases/download/v${CRANE_VERSION}/go-containerregistry_Linux_x86_64.tar.gz"
+        echo "${CRANE_SHA256}  /tmp/crane.tar.gz" | sha256sum -c -
+        sudo tar -xzf /tmp/crane.tar.gz -C /usr/local/bin crane
+        rm -f /tmp/crane.tar.gz
 
     - name: Steam login
       shell: bash
@@ -195,7 +211,7 @@ runs:
     - name: Restore game install cache
       id: game-cache
       if: steps.gate.outputs.skipped != 'true'
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
         # Restore the prior install so steamcmd app_update fetches only the delta.
         # The exact-buildid key never hits on a real rebuild (the gate only lets us
@@ -257,7 +273,7 @@ runs:
 
     - name: Save game install cache
       if: steps.gate.outputs.skipped != 'true'
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
         path: ${{ runner.temp }}/steam-game
         key: steam-${{ inputs.app-id }}-${{ inputs.branch }}-${{ inputs.steam-platform != '' && inputs.steam-platform || 'host' }}-${{ steps.gate.outputs.published }}

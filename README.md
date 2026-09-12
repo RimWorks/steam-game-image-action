@@ -65,7 +65,7 @@ That is the whole invocation. You do not need `--init`, `--user`, or a `HOME` ov
 A real CI run adds mounts and reads the results back:
 
 ```sh
-mkdir -p "$PWD/out" && chmod 777 "$PWD/out"
+mkdir -p "$PWD/out" "$PWD/config" && chmod 777 "$PWD/out" "$PWD/config"
 
 docker run --rm \
   -v "$PWD/mods:/game/Mods:ro" \
@@ -78,8 +78,12 @@ docker run --rm \
 `$HOME` in the image is `/home/app`. The game writes its saves and config under it, so mount
 your config there and the game finds it.
 
-The game's exit code is the container's exit code. Mount a host directory at `/out` and
-`chmod 777` it, because the host and the container do not agree on user ids.
+**`chmod 777` every host directory the game writes to, including the config mount.** The game
+runs as uid 1000 and your host directories do not belong to that user. RimWorld writes
+`Knowledge.xml` and `LastPlayedVersion.txt` back into its config directory, so a read-only
+config mount fails at the main menu with `UnauthorizedAccessException`.
+
+The game's exit code is the container's exit code.
 
 RimWorld has no official headless test mode. This image supplies a display and the native
 libraries so a launch can proceed. You still need a test-runner mod that boots a scenario,

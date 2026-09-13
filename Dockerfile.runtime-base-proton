@@ -51,15 +51,13 @@ RUN apt-get update \
 
 ENV LANG=C.UTF-8
 
-RUN mkdir -p /opt/proton \
-    && curl -fsSL "https://github.com/GloriousEggroll/proton-ge-custom/releases/download/${PROTON_VERSION}/${PROTON_VERSION}.tar.gz" -o /tmp/proton.tar.gz \
+RUN mkdir -p /opt/proton /opt/ffmpeg \
+    && curl -fsSL --proto '=https' --proto-redir '=https' "https://github.com/GloriousEggroll/proton-ge-custom/releases/download/${PROTON_VERSION}/${PROTON_VERSION}.tar.gz" -o /tmp/proton.tar.gz \
     && echo "${PROTON_SHA512}  /tmp/proton.tar.gz" | sha512sum -c - \
     && tar -xzf /tmp/proton.tar.gz -C /opt/proton --strip-components=1 \
     && rm /tmp/proton.tar.gz \
-    && test -x /opt/proton/proton
-
-RUN mkdir -p /opt/ffmpeg \
-    && curl -fsSL "https://github.com/BtbN/FFmpeg-Builds/releases/download/${FFMPEG_BUILD}/${FFMPEG_ZIP}" -o /tmp/ffmpeg.zip \
+    && test -x /opt/proton/proton \
+    && curl -fsSL --proto '=https' --proto-redir '=https' "https://github.com/BtbN/FFmpeg-Builds/releases/download/${FFMPEG_BUILD}/${FFMPEG_ZIP}" -o /tmp/ffmpeg.zip \
     && echo "${FFMPEG_SHA256}  /tmp/ffmpeg.zip" | sha256sum -c - \
     && unzip -j /tmp/ffmpeg.zip '*/bin/ffmpeg.exe' -d /opt/ffmpeg \
     && rm /tmp/ffmpeg.zip \

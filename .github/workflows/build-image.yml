@@ -63,7 +63,7 @@ jobs:
       packages: write
       contents: read
     steps:
-      - uses: RimWorks/steam-game-image-action@3152efb5411f3e637260569fb68cfd8fb5ed55c1 # v1
+      - uses: RimWorks/steam-game-image-action@5e8b6337caf578b7317027156bead803a524a1cf # v1
         with:
           steam-username: ${{ inputs.steam-username }}
           steam-config-vdf: ${{ secrets.steam-config-vdf }}

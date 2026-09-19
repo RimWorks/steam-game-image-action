@@ -133,8 +133,8 @@ runnable copy of this workflow is in
 
 | input | default | notes |
 |---|---|---|
-| `steam-username` | N/A | account that owns the game |
-| `steam-config-vdf` | N/A | base64 of a steamcmd `config.vdf` (a secret) |
+| `steam-username` | `""` | account that owns the game. Empty means no Steam access, see below |
+| `steam-config-vdf` | `""` | base64 of a steamcmd `config.vdf` (a secret) |
 | `app-id` | `294100` | Steam app id (RimWorld) |
 | `branch` | `public` | Steam branch, e.g. `1.5`, `1.4` |
 | `branch-password` | `""` | for password-protected betas |
@@ -149,6 +149,15 @@ runnable copy of this workflow is in
 Outputs: `image-ref`, `version`, `buildid`, `skipped`. `image-ref` is the `image:version` ref
 when the action built, and the `image:latest-<branch>` ref when the gate skipped, so it is
 always pullable.
+
+### Runs without Steam credentials
+
+A pull request from a fork gets no repository secrets, so `steam-username` and
+`steam-config-vdf` arrive empty. The action then skips steamcmd entirely and outputs the
+`image:latest-<branch>` ref a credentialed run already pushed, with `skipped` set to `true`.
+`registry-password` is still needed to pull it; `GITHUB_TOKEN` with `packages: read` is enough.
+If that tag does not exist yet the action fails and says so, since only a run with credentials
+can build it.
 
 Three combinations cover most uses:
 

@@ -7,11 +7,16 @@ branding:
 
 inputs:
   steam-username:
-    description: "Steam account name that owns the game and matches the config.vdf session."
-    required: true
+    description: >-
+      Steam account name. Leave it and steam-config-vdf empty when the run has no secrets
+      (a pull request from a fork): the action then skips the build and outputs the
+      image:latest-<branch> a credentialed run already pushed.
+    required: false
+    default: ""
   steam-config-vdf:
-    description: "Base64-encoded steamcmd config.vdf for a logged-in session (a repo secret)."
-    required: true
+    description: "base64 of a logged-in steamcmd config.vdf. Empty means no Steam access, see steam-username."
+    required: false
+    default: ""
   app-id:
     description: "Steam app id to download."
     required: false
@@ -96,8 +101,8 @@ inputs:
 
 outputs:
   image-ref:
-    description: "Image ref to consume: image:version when built, image:latest-<branch> when the build was skipped."
-    value: ${{ steps.build.outputs.image-ref || steps.gate.outputs.image-ref }}
+    description: "Image ref to consume: image:version when built, image:latest-<branch> when the build was skipped or the run had no Steam credentials."
+    value: ${{ steps.build.outputs.image-ref || steps.gate.outputs.image-ref || steps.reuse.outputs.image-ref }}
   version:
     description: "The version tag used."
     value: ${{ steps.build.outputs.version }}
@@ -105,8 +110,8 @@ outputs:
     description: "The Steam buildid that was built."
     value: ${{ steps.gate.outputs.published }}
   skipped:
-    description: "true if the build was skipped because the buildid was unchanged."
-    value: ${{ steps.gate.outputs.skipped }}
+    description: "true if the build was skipped: the buildid was unchanged, or the run had no Steam credentials."
+    value: ${{ steps.gate.outputs.skipped || steps.reuse.outputs.skipped }}
 
 runs:
   using: composite
@@ -142,7 +147,23 @@ runs:
         sudo tar -xzf /tmp/crane.tar.gz -C /usr/local/bin crane
         rm -f /tmp/crane.tar.gz
 
+    - name: Check for Steam credentials
+      id: creds
+      shell: bash
+      env:
+        STEAM_USERNAME: ${{ inputs.steam-username }}
+        STEAM_CONFIG_VDF_B64: ${{ inputs.steam-config-vdf }}
+      run: |
+        set -euo pipefail
+        if [ -n "$STEAM_USERNAME" ] && [ -n "$STEAM_CONFIG_VDF_B64" ]; then
+          echo "present=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "present=false" >> "$GITHUB_OUTPUT"
+          echo "no Steam credentials; the image a credentialed run pushed is reused instead"
+        fi
+
     - name: Steam login
+      if: steps.creds.outputs.present == 'true'
       shell: bash
       env:
         STEAM_CONFIG_VDF_B64: ${{ inputs.steam-config-vdf }}
@@ -181,6 +202,7 @@ runs:
 
     - name: Build-id gate
       id: gate
+      if: steps.creds.outputs.present == 'true'
       shell: bash
       env:
         STEAM_USERNAME: ${{ inputs.steam-username }}
@@ -212,9 +234,26 @@ runs:
           echo "skipped=false" >> "$GITHUB_OUTPUT"
         fi
 
+    - name: Reuse the published image
+      id: reuse
+      if: steps.creds.outputs.present != 'true'
+      shell: bash
+      env:
+        REGISTRY: ${{ inputs.registry }}
+        REGISTRY_USER: ${{ inputs.registry-username }}
+        REGISTRY_PASSWORD: ${{ inputs.registry-password }}
+        IMAGE: ${{ steps.base.outputs.image }}
+        BRANCH_TAG: ${{ steps.base.outputs.branch-tag }}
+      run: |
+        set -euo pipefail
+        ref="$(bash "${{ github.action_path }}/scripts/reuse-existing.sh")"
+        echo "skipped=true" >> "$GITHUB_OUTPUT"
+        echo "image-ref=$ref" >> "$GITHUB_OUTPUT"
+        echo "reusing $ref"
+
     - name: Restore game install cache
       id: game-cache
-      if: steps.gate.outputs.skipped != 'true'
+      if: steps.creds.outputs.present == 'true' && steps.gate.outputs.skipped != 'true'
       uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
         # Restore the prior install so steamcmd app_update fetches only the delta.
@@ -227,7 +266,7 @@ runs:
           steam-${{ inputs.app-id }}-${{ inputs.branch }}-${{ inputs.steam-platform != '' && inputs.steam-platform || 'host' }}-
 
     - name: Download game
-      if: steps.gate.outputs.skipped != 'true'
+      if: steps.creds.outputs.present == 'true' && steps.gate.outputs.skipped != 'true'
       shell: bash
       env:
         STEAM_USERNAME: ${{ inputs.steam-username }}
@@ -257,7 +296,7 @@ runs:
     # steamcmd exits 0 on a partial update, so a half-downloaded install used to ship and then
     # get saved back to the cache, poisoning every later build.
     - name: Verify game install
-      if: steps.gate.outputs.skipped != 'true'
+      if: steps.creds.outputs.present == 'true' && steps.gate.outputs.skipped != 'true'
       shell: bash
       env:
         APP_ID: ${{ inputs.app-id }}
@@ -276,7 +315,7 @@ runs:
         fi
 
     - name: Save game install cache
-      if: steps.gate.outputs.skipped != 'true'
+      if: steps.creds.outputs.present == 'true' && steps.gate.outputs.skipped != 'true'
       uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
         path: ${{ runner.temp }}/steam-game
@@ -284,7 +323,7 @@ runs:
 
     - name: Build and push image
       id: build
-      if: steps.gate.outputs.skipped != 'true'
+      if: steps.creds.outputs.present == 'true' && steps.gate.outputs.skipped != 'true'
       shell: bash
       env:
         IMAGE: ${{ steps.base.outputs.image }}

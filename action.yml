@@ -159,7 +159,7 @@ runs:
 
     - name: Restore the game download cache
       if: steps.creds.outputs.present == 'true'
-      uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         # one entry per <appid>-<branch>-<depot>, so variants sharing a depot share a cache
         path: ~/.local/share/gamecrate/steam/apps
@@ -189,7 +189,7 @@ runs:
 
     - name: Save the game download cache
       if: steps.creds.outputs.present == 'true' && steps.build.outputs.downloaded == 'true'
-      uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ~/.local/share/gamecrate/steam/apps
         key: gamecrate-steam-${{ inputs.game }}-${{ inputs.branch }}-${{ github.run_id }}

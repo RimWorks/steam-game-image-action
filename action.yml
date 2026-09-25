@@ -132,8 +132,6 @@ runs:
         BRANCH_TAG: ${{ steps.ref.outputs.branch-tag }}
       run: |
         set -euo pipefail
-        sudo apt-get -o Acquire::Retries=3 update -qq
-        sudo apt-get install -y -qq --no-install-recommends jq >/dev/null
         ref="$(bash "${{ github.action_path }}/scripts/reuse-existing.sh")"
         echo "skipped=true" >> "$GITHUB_OUTPUT"
         echo "image-ref=$ref" >> "$GITHUB_OUTPUT"

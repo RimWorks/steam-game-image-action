@@ -12,7 +12,7 @@ on:
 
 jobs:
   build:
-    uses: RimWorks/steam-game-image-action/.github/workflows/build-image.yml@v2
+    uses: RimWorks/steam-game-image-action/.github/workflows/build-image.yml@v4
     with:
       image: ghcr.io/${{ github.repository_owner }}/rimworld-game
       steam-username: your-steam-account
@@ -20,5 +20,5 @@ jobs:
       branch: public
       skip-if-unchanged: "true"
     secrets:
-      steam-config-vdf: ${{ secrets.STEAM_CONFIG_VDF }}
+      steam-config-vdf: ${{ secrets.STEAM_CONFIG_VDF_B64 }}
       registry-password: ${{ secrets.GITHUB_TOKEN }}

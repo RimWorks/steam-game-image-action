@@ -108,12 +108,12 @@ runs:
       shell: bash
       env:
         STEAM_USERNAME: ${{ inputs.steam-username }}
-        STEAM_CONFIG_VDF_B64: ${{ inputs.steam-config-vdf }}
+        STEAM_CONFIG_VDF: ${{ inputs.steam-config-vdf }}
       run: |
         set -euo pipefail
         # A fork pull request gets no secrets. That is not a failure: it reuses what a
         # credentialed run already pushed, so a contributor still gets a green build.
-        if [ -n "$STEAM_USERNAME" ] && [ -n "$STEAM_CONFIG_VDF_B64" ]; then
+        if [ -n "$STEAM_USERNAME" ] && [ -n "$STEAM_CONFIG_VDF" ]; then
           echo "present=true" >> "$GITHUB_OUTPUT"
         else
           echo "present=false" >> "$GITHUB_OUTPUT"

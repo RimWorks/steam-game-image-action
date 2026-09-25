@@ -55,7 +55,7 @@ jobs:
       packages: write
       contents: read
     steps:
-      - uses: RimWorks/steam-game-image-action@v2
+      - uses: RimWorks/steam-game-image-action@v4
         with:
           game: ${{ inputs.game }}
           plugin: ${{ inputs.plugin }}

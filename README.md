@@ -25,7 +25,7 @@ steamcmd +login your-steam-account     # complete Steam Guard
 base64 -w0 ~/Steam/config/config.vdf   # copy this
 ```
 
-Save the base64 blob as a repo secret named `STEAM_CONFIG_VDF`. The session expires eventually.
+Save the base64 blob as a repo secret named `STEAM_CONFIG_VDF_B64`. The session expires eventually.
 When it does, run these two commands again and update the secret.
 
 Then add a workflow:
@@ -36,11 +36,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions: { packages: write, contents: read }
     steps:
-      - uses: RimWorks/steam-game-image-action@v1
+      - uses: RimWorks/steam-game-image-action@v4
         with:
           game: rimworld
           steam-username: your-steam-account
-          steam-config-vdf: ${{ secrets.STEAM_CONFIG_VDF }}
+          steam-config-vdf: ${{ secrets.STEAM_CONFIG_VDF_B64 }}
           image: ghcr.io/${{ github.repository_owner }}/rimworld-game
           registry-password: ${{ secrets.GITHUB_TOKEN }}
 ```

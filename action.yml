@@ -157,7 +157,7 @@ runs:
         [ -z "$packages" ] && packages="@gamecrate/$GAME"
         # shellcheck disable=SC2086
         npm install -g --no-fund --no-audit "$cli" $packages
-        gamecrate --version
+        gamecrate --help >/dev/null
 
     - name: Restore the game download cache
       if: steps.creds.outputs.present == 'true'

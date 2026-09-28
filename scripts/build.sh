@@ -23,8 +23,9 @@ fi
 
 results="$RUNNER_TEMP/gamecrate-results.json"
 # the table goes to stderr and reaches the log; only the JSON is stdout
-if ! gamecrate "${args[@]}" > "$results"; then
-  status=$?
+status=0
+gamecrate "${args[@]}" > "$results" || status=$?
+if [ "$status" -ne 0 ]; then
   cat "$results" >&2 || true
   exit "$status"
 fi

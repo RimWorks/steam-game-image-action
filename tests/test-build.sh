@@ -72,6 +72,25 @@ else
 fi
 
 setup
+fake_gamecrate '[{"branch":"version-1.6","variant":"linux","status":"skipped","reason":"up-to-date","tags":["latest-version-1.6","1.6"]}]'
+GAME=atlas IMAGE=ghcr.io/me/atlas BRANCH=version-1.6 bash "$script" > /dev/null
+check "a skipped cell that kept its tags still reports a ref" \
+  "$(grep '^image-ref=' "$GITHUB_OUTPUT")" "image-ref=ghcr.io/me/atlas:latest-version-1.6"
+
+setup
+cat > "$bin/gamecrate" <<'FAKE'
+#!/usr/bin/env bash
+echo "gamecrate: unknown flag --alias" >&2
+exit 7
+FAKE
+chmod +x "$bin/gamecrate"
+set +e
+GAME=atlas IMAGE=ghcr.io/me/atlas bash "$script" > /dev/null 2>&1
+code=$?
+set -e
+check "a gamecrate that exits non-zero fails the step with its own code" "$code" "7"
+
+setup
 fake_gamecrate '[]'
 GAME=atlas IMAGE=ghcr.io/me/atlas BRANCH=phoenix STEAM_BRANCH_PASSWORD=hunter2 bash "$script" > /dev/null
 check "a beta password never reaches the argv" \

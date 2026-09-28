@@ -52,6 +52,10 @@ check "a built cell marks the cache dirty" \
   "$(grep -c '^downloaded=true' "$GITHUB_OUTPUT")" "1"
 check "the branch reaches gamecrate as --beta" \
   "$(grep -c -- '--beta public' "$work/argv")" "1"
+check "the game reaches gamecrate as --game, never as a positional" \
+  "$(grep -c -- '--game atlas' "$work/argv")" "1"
+check "no bare game argument survives before the flags" \
+  "$(grep -c -- 'steam build --game' "$work/argv")" "1"
 
 setup
 fake_gamecrate '[{"branch":"public","variant":"linux","status":"skipped","reason":"up-to-date","tags":[]}]'

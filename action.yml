@@ -15,7 +15,7 @@ inputs:
     required: false
     default: ""
   gamecrate-version:
-    description: "Version of @gamecrate/cli to install. Empty = latest."
+    description: "Version of @gamecrate/cli to install. Empty = latest. Needs 3.0.0 or newer."
     required: false
     default: ""
   steam-username:
@@ -155,8 +155,9 @@ runs:
         # without a plugin gamecrate knows nothing about this game, so the convention wins
         packages="$(printf '%s\n' "$PLUGINS" | grep -v '^[[:space:]]*$' || true)"
         [ -z "$packages" ] && packages="@gamecrate/$GAME"
+        npm install -g --no-fund --no-audit "$cli"
         # shellcheck disable=SC2086
-        npm install -g --no-fund --no-audit "$cli" $packages
+        npm install --no-fund --no-audit --no-save $packages
         gamecrate --help >/dev/null
 
     - name: Restore the game download cache

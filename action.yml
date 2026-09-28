@@ -37,6 +37,10 @@ inputs:
     description: "Password for a password-protected beta branch (optional)."
     required: false
     default: ""
+  aliases:
+    description: "Newline or comma separated extra moving tags, e.g. 1.6 so a consumer can pull a short ref."
+    required: false
+    default: ""
   variant:
     description: "Image variant to build. Empty = every variant the plugin declares."
     required: false
@@ -174,6 +178,7 @@ runs:
         IMAGE: ${{ steps.ref.outputs.image }}
         BRANCH: ${{ inputs.branch }}
         VARIANT: ${{ inputs.variant }}
+        ALIASES: ${{ inputs.aliases }}
         BASE_IMAGE: ${{ inputs.base-image }}
         PLATFORM: ${{ inputs.platform }}
         BRANCH_TAG: ${{ steps.ref.outputs.branch-tag }}

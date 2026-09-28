@@ -152,9 +152,8 @@ game renders on the CPU and boots slowly.
 
 ## Build a mod against the real assemblies
 
-A community reference package, such as `Krafs.Rimworld.Ref` for RimWorld, is usually the easier
-path. Reach for the image when you need a member the reference package does not expose, or when
-you want the exact assemblies a specific game build shipped.
+The image carries the exact assemblies a specific game build shipped, so what compiles in CI is
+what runs on a player's machine. It also covers any Steam branch, including a beta.
 
 Pull the image, copy the managed DLLs onto the runner, then build:
 
@@ -174,8 +173,10 @@ Pull the image, copy the managed DLLs onto the runner, then build:
 
 Point your `.csproj` at the staged DLLs with a `Reference` and a `HintPath` guarded by
 `Exists()`, then build. A fresh clone has no image, so an unguarded `HintPath` breaks local
-builds. If the plugin declares a build-only variant, pass its name to `variant` for a much
-smaller image. The full runnable copy of this workflow is in
+builds. The shipped DLLs are not publicized, so source that touches a non-public member, or
+puts `public override` on a protected one, fails with CS0122 or CS0507. Match the real access
+levels, or add a publicizer. If the plugin declares a build-only variant, pass its name to
+`variant` for a much smaller image. The full runnable copy of this workflow is in
 [`examples/build-mod-against-game.yml`](examples/build-mod-against-game.yml).
 
 ## How it works

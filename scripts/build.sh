@@ -8,6 +8,9 @@ set -euo pipefail
 args=(steam build "$GAME" --push --image "$IMAGE" --json)
 [ -n "${BRANCH:-}" ] && args+=(--beta "$BRANCH")
 [ -n "${VARIANT:-}" ] && args+=(--variant "$VARIANT")
+while read -r alias; do
+  [ -n "$alias" ] && args+=(--alias "$alias")
+done <<< "$(printf '%s' "${ALIASES:-}" | tr ',' '\n')"
 [ -n "${BASE_IMAGE:-}" ] && args+=(--base "$BASE_IMAGE")
 [ -n "${PLATFORM:-}" ] && args+=(--platform "$PLATFORM")
 [ "${SKIP_IF_UNCHANGED:-true}" != "true" ] && args+=(--force)

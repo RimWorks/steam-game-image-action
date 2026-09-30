@@ -56,6 +56,8 @@ check "the game reaches gamecrate as --game, never as a positional" \
   "$(grep -c -- '--game atlas' "$work/argv")" "1"
 check "no bare game argument survives before the flags" \
   "$(grep -c -- 'steam build --game' "$work/argv")" "1"
+check "a push never loads the image into the runner's docker daemon" \
+  "$(grep -c -- '--no-load' "$work/argv")" "1"
 
 setup
 fake_gamecrate '[{"branch":"public","variant":"linux","status":"skipped","reason":"up-to-date","tags":[]}]'

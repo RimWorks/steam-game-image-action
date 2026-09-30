@@ -5,7 +5,7 @@ set -euo pipefail
 : "${GAME:?game}"
 : "${IMAGE:?image}"
 
-args=(steam build --game "$GAME" --push --image "$IMAGE" --json)
+args=(steam build --game "$GAME" --push --no-load --image "$IMAGE" --json)
 [ -n "${BRANCH:-}" ] && args+=(--beta "$BRANCH")
 [ -n "${VARIANT:-}" ] && args+=(--variant "$VARIANT")
 while read -r alias; do

@@ -15,7 +15,7 @@ inputs:
     required: false
     default: ""
   gamecrate-version:
-    description: "Version of @gamecrate/cli to install. Empty = latest. Needs 3.0.0 or newer."
+    description: "Version of @gamecrate/cli to install. Empty = latest. Needs 2.6.0 or newer."
     required: false
     default: ""
   steam-username:

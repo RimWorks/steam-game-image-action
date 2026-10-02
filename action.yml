@@ -15,7 +15,7 @@ inputs:
     required: false
     default: ""
   gamecrate-version:
-    description: "Version of @gamecrate/cli to install. Empty = latest. Needs 2.6.0 or newer."
+    description: "Version of @gamecrate/cli to install. Empty = latest. Needs 3.0.0 or newer."
     required: false
     default: ""
   steam-username:
@@ -112,12 +112,12 @@ runs:
       shell: bash
       env:
         STEAM_USERNAME: ${{ inputs.steam-username }}
-        STEAM_CONFIG_VDF: ${{ inputs.steam-config-vdf }}
+        STEAM_CONFIG_VDF_B64: ${{ inputs.steam-config-vdf }}
       run: |
         set -euo pipefail
         # A fork pull request gets no secrets. That is not a failure: it reuses what a
         # credentialed run already pushed, so a contributor still gets a green build.
-        if [ -n "$STEAM_USERNAME" ] && [ -n "$STEAM_CONFIG_VDF" ]; then
+        if [ -n "$STEAM_USERNAME" ] && [ -n "$STEAM_CONFIG_VDF_B64" ]; then
           echo "present=true" >> "$GITHUB_OUTPUT"
         else
           echo "present=false" >> "$GITHUB_OUTPUT"
@@ -185,7 +185,7 @@ runs:
         BRANCH_TAG: ${{ steps.ref.outputs.branch-tag }}
         SKIP_IF_UNCHANGED: ${{ inputs.skip-if-unchanged }}
         STEAM_USERNAME: ${{ inputs.steam-username }}
-        STEAM_CONFIG_VDF: ${{ inputs.steam-config-vdf }}
+        STEAM_CONFIG_VDF_B64: ${{ inputs.steam-config-vdf }}
         STEAM_BRANCH_PASSWORD: ${{ inputs.branch-password }}
         GAMECRATE_REGISTRY_USER: ${{ inputs.registry-username }}
         GAMECRATE_REGISTRY_PASSWORD: ${{ inputs.registry-password }}

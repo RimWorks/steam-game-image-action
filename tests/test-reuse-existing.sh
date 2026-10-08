@@ -16,7 +16,7 @@ if [[ "$args" == *"--config"* ]]; then
     exit 0
 fi
 if [[ "$args" == *"Authorization: Bearer"* ]]; then
-    [[ "$args" == *"$WANT_TAG"* ]] && echo 200 || echo 404
+    [[ "$args" == *"$WANT_TAG"* ]] && echo 200 || echo "${MISS_CODE:-404}"
     exit 0
 fi
 printf 'HTTP/1.1 401\r\nwww-authenticate: Bearer realm="https://auth.example/token",service="reg"\r\n401'
@@ -53,4 +53,18 @@ if ! grep -q "does not exist yet" "$FAKE/err"; then
     exit 1
 fi
 echo "PASS: missing tag fails with a reason"
+
+if MISS_CODE=403 BRANCH_TAG=latest-beta bash "$SCRIPT" >/dev/null 2>"$FAKE/err"; then
+    echo "FAIL: a refused token did not fail" >&2
+    exit 1
+fi
+if grep -q "does not exist yet" "$FAKE/err"; then
+    echo "FAIL: a 403 still reads as a missing image, which sends the reader hunting" >&2
+    exit 1
+fi
+if ! grep -q "Actions access" "$FAKE/err"; then
+    echo "FAIL: a refused token error does not name the access list" >&2
+    exit 1
+fi
+echo "PASS: a refused token names the access list, not a missing image"
 echo "all reuse tests passed"

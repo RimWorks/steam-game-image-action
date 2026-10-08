@@ -54,6 +54,14 @@ if [[ "$code" == "401" ]]; then
         -H "Authorization: Bearer ${token}" "$url")"
 fi
 
+if [[ "$code" == "401" || "$code" == "403" ]]; then
+    echo "::error::${api} refused this token for ${name} (HTTP ${code}), so whether" \
+         "$IMAGE:$BRANCH_TAG exists is unknown. An org package carries its own Actions access" \
+         "list, and a role there overrides permissions: packages: write. Check that list before" \
+         "looking for a missing image." >&2
+    exit 1
+fi
+
 if [[ "$code" != "200" ]]; then
     echo "::error::No Steam credentials and $IMAGE:$BRANCH_TAG does not exist yet (HTTP ${code})." \
          "A run with credentials (a push to the default branch) has to build it first." >&2

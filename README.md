@@ -67,6 +67,8 @@ downloads nothing when they match, so cron runs stay cheap.
 | `gamecrate-version` | `""` | version of `@gamecrate/cli` to install. Empty means latest |
 | `steam-username` | `""` | account that owns the game. Empty means no Steam access, see below |
 | `steam-config-vdf` | `""` | base64 of a steamcmd `config.vdf` (a secret) |
+| `depotdownloader-account` | `""` | base64 of DepotDownloader's `account.config` (a secret), from `gamecrate steam login --print-token`. Set, the game downloads with DepotDownloader and skips the account's workshop subscriptions. Needs gamecrate 3.10.0 |
+| `depotdownloader-version` | `3.4.0` | DepotDownloader release to install when `depotdownloader-account` is set |
 | `branch` | `public` | Steam branch, for example `1.5`. Empty means every branch the plugin declares |
 | `branch-password` | `""` | for a password-protected beta branch |
 | `variant` | `""` | one image variant. Empty means every variant the plugin declares |

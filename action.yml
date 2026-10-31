@@ -29,6 +29,17 @@ inputs:
     description: "base64 of a logged-in steamcmd config.vdf. Empty means no Steam access, see steam-username."
     required: false
     default: ""
+  depotdownloader-account:
+    description: >-
+      base64 of DepotDownloader's account.config, from `gamecrate steam login --print-token`.
+      Set, the game downloads with DepotDownloader and skips the account's workshop
+      subscriptions. Empty means steamcmd downloads the game.
+    required: false
+    default: ""
+  depotdownloader-version:
+    description: "DepotDownloader release to install when depotdownloader-account is set."
+    required: false
+    default: "3.4.0"
   branch:
     description: "Steam branch to build. Empty = every branch the plugin declares."
     required: false
@@ -160,6 +171,22 @@ runs:
         npm install --no-fund --no-audit --no-save $packages
         gamecrate --help >/dev/null
 
+    - name: Install DepotDownloader
+      if: steps.creds.outputs.present == 'true' && inputs.depotdownloader-account != ''
+      shell: bash
+      env:
+        VERSION: ${{ inputs.depotdownloader-version }}
+      run: |
+        set -euo pipefail
+        dir="$RUNNER_TEMP/depotdownloader"
+        mkdir -p "$dir/bin"
+        curl -sSfL --retry 3 -o "$dir/depotdownloader.zip" \
+          "https://github.com/SteamRE/DepotDownloader/releases/download/DepotDownloader_${VERSION}/DepotDownloader-linux-x64.zip"
+        unzip -q -o "$dir/depotdownloader.zip" DepotDownloader -d "$dir"
+        install -m 755 "$dir/DepotDownloader" "$dir/bin/depotdownloader"
+        echo "$dir/bin" >> "$GITHUB_PATH"
+        "$dir/bin/depotdownloader" -V
+
     - name: Restore the game download cache
       if: steps.creds.outputs.present == 'true'
       uses: actions/cache/restore@v6
@@ -186,6 +213,7 @@ runs:
         SKIP_IF_UNCHANGED: ${{ inputs.skip-if-unchanged }}
         STEAM_USERNAME: ${{ inputs.steam-username }}
         STEAM_CONFIG_VDF_B64: ${{ inputs.steam-config-vdf }}
+        DEPOTDOWNLOADER_ACCOUNT_B64: ${{ inputs.depotdownloader-account }}
         STEAM_BRANCH_PASSWORD: ${{ inputs.branch-password }}
         GAMECRATE_REGISTRY_USER: ${{ inputs.registry-username }}
         GAMECRATE_REGISTRY_PASSWORD: ${{ inputs.registry-password }}
@@ -215,4 +243,5 @@ runs:
       shell: bash
       run: |
         # the session is a live credential. it does not outlive the job that used it
-        rm -rf "${HOME}/.local/share/gamecrate/steam/.steam" "${HOME}/.steam" || true
+        rm -rf "${HOME}/.local/share/gamecrate/steam/.steam" "${HOME}/.steam" \
+          "${HOME}/.local/share/gamecrate/steam/.local" || true

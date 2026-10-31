@@ -41,6 +41,8 @@ on:
     secrets:
       steam-config-vdf:
         required: true
+      depotdownloader-account:
+        required: false
       registry-password:
         required: true
 
@@ -61,6 +63,7 @@ jobs:
           plugin: ${{ inputs.plugin }}
           steam-username: ${{ inputs.steam-username }}
           steam-config-vdf: ${{ secrets.steam-config-vdf }}
+          depotdownloader-account: ${{ secrets.depotdownloader-account }}
           branch: ${{ inputs.branch }}
           variant: ${{ inputs.variant }}
           image: ${{ inputs.image }}

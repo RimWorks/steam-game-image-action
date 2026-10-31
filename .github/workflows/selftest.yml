@@ -43,6 +43,7 @@ jobs:
           image: ghcr.io/${{ github.repository_owner }}/rimworld-game-runnable
           steam-username: ${{ secrets.STEAM_USERNAME }}
           steam-config-vdf: ${{ secrets.STEAM_CONFIG_VDF_B64 }}
+          depotdownloader-account: ${{ secrets.DEPOTDOWNLOADER_ACCOUNT_B64 }}
           registry-password: ${{ secrets.GITHUB_TOKEN }}
           skip-if-unchanged: ${{ inputs.force && 'false' || 'true' }}
 

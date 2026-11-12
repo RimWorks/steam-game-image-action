@@ -52,7 +52,7 @@ permissions:
 jobs:
   build:
     name: build-image
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       packages: write
       contents: read
